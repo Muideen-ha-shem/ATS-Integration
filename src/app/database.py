@@ -1,10 +1,8 @@
 import os
 from datetime import datetime
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
-
-from app import models, crud
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./ats_integration.db")
 
@@ -30,6 +28,8 @@ def create_tables() -> None:
 
 
 def seed_sample_data() -> None:
+    from app import crud
+
     with SessionLocal() as session:
         if not crud.get_integration_by_company_and_provider(session, "company_123", "workable"):
             crud.create_integration(
