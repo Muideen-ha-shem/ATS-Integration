@@ -67,3 +67,10 @@ async def workable_webhook(
     services.queue_resume_for_scoring(event)
 
     return {"status": "accepted", "event_id": event.event_id}
+
+
+"""Want a root page"""
+
+@app.get("/")
+async def root() -> dict[str, str]:
+    return {"message": "ATS Integration API is running"}
