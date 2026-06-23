@@ -1,0 +1,27 @@
+[project]
+name = "ats_integration"
+version = "0.1.0"
+description = "FastAPI ATS webhook integration service"
+authors = ["ATS Integration <muideenil@ha-shem.com>"]
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+classifiers = [
+    "Framework :: FastAPI",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Web Development"
+]
+
+[project.urls]
+"Homepage" = ""
+"Repository" = "https://github.com/Muideen-ha-shem/ATS-Integration.git"
+
+[project.dependencies]
+fastapi = "^0.111.0"
+uvicorn = { version = "^0.23.0", extras = ["standard"] }
+sqlalchemy = "^2.0.20"
+pydantic = "^2.8.0"
+python-dotenv = "^1.0.0"
+
+[project.optional-dependencies]
+test = ["pytest>=8.0","httpx>=0.26.0"]
