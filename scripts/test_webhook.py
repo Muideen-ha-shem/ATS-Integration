@@ -1,3 +1,5 @@
+"""Simple script for exercising the Workable webhook route during local development."""
+
 from pathlib import Path
 import os
 import sys
@@ -12,6 +14,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 
 if __name__ == "__main__":
+    # Remove any previous local test database before running the script.
     if db_path.exists():
         db_path.unlink()
 

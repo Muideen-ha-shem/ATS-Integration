@@ -1,3 +1,5 @@
+"""Database configuration and helper utilities for ATS Integration."""
+
 import os
 from datetime import datetime
 
@@ -15,19 +17,23 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, futu
 
 
 class Base(DeclarativeBase):
+    """Base declarative class for SQLAlchemy models."""
     pass
 
 
 def get_db() -> Session:
+    """Yield a database session for dependency injection."""
     with SessionLocal() as session:
         yield session
 
 
 def create_tables() -> None:
+    """Create all database tables using SQLAlchemy metadata."""
     Base.metadata.create_all(bind=engine)
 
 
 def seed_sample_data() -> None:
+    """Seed example integration and API key records for local development."""
     from app import crud
 
     with SessionLocal() as session:

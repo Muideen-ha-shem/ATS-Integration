@@ -1,3 +1,5 @@
+"""CRUD helpers for integration, API key, and webhook event persistence."""
+
 import hashlib
 from datetime import datetime
 from typing import Optional
@@ -8,10 +10,12 @@ from app import models
 
 
 def hash_api_key(api_key: str) -> str:
+    """Create a SHA-256 hash from a plaintext API key."""
     return hashlib.sha256(api_key.encode("utf-8")).hexdigest()
 
 
 def get_integration_by_company_and_provider(db: Session, company_id: str, provider: str) -> Optional[models.Integration]:
+    """Return the integration record for a company and ATS provider."""
     return (
         db.query(models.Integration)
         .filter(models.Integration.company_id == company_id, models.Integration.provider == provider)
@@ -20,10 +24,12 @@ def get_integration_by_company_and_provider(db: Session, company_id: str, provid
 
 
 def get_api_key_for_company(db: Session, company_id: str) -> Optional[models.ApiKey]:
+    """Return the active API key record for a company."""
     return db.query(models.ApiKey).filter(models.ApiKey.company_id == company_id, models.ApiKey.status == "active").first()
 
 
 def validate_api_key(db: Session, company_id: str, api_key: str) -> bool:
+    """Validate the provided API key against the stored hash."""
     stored = get_api_key_for_company(db, company_id)
     if not stored:
         return False
@@ -37,6 +43,7 @@ def create_integration(
     status: str = "active",
     callback_url: str | None = None,
 ) -> models.Integration:
+    """Create and persist a new ATS integration record."""
     integration = models.Integration(
         company_id=company_id,
         provider=provider,
@@ -56,6 +63,7 @@ def create_api_key(
     status: str = "active",
     expires_at: datetime | None = None,
 ) -> models.ApiKey:
+    """Create and persist a new API key record for a company."""
     api_key = models.ApiKey(
         company_id=company_id,
         key_hash=hash_api_key(plain_key),
@@ -76,6 +84,7 @@ def create_webhook_event(
     payload: dict,
     status: str = "received",
 ) -> models.WebhookEvent:
+    """Create and persist a new webhook event record."""
     event = models.WebhookEvent(
         provider=provider,
         company_id=company_id,
@@ -90,4 +99,5 @@ def create_webhook_event(
 
 
 def get_webhook_event_by_id(db: Session, event_id: str) -> Optional[models.WebhookEvent]:
+    """Return a webhook event by its unique identifier."""
     return db.query(models.WebhookEvent).filter(models.WebhookEvent.event_id == event_id).first()

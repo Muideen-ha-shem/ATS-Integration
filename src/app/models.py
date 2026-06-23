@@ -1,13 +1,14 @@
+"""SQLAlchemy model definitions for ATS integration entities."""
+
 import uuid
 from datetime import datetime
 
-from sqlalchemy import JSON, Column, DateTime, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import relationship
-
+from sqlalchemy import JSON, Column, DateTime, Integer, String
 from app.database import Base
 
 
 class Integration(Base):
+    """A customer integration configuration for an ATS provider."""
     __tablename__ = "integrations"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -19,6 +20,7 @@ class Integration(Base):
 
 
 class ApiKey(Base):
+    """An API key record used to authenticate incoming webhook requests."""
     __tablename__ = "api_keys"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -30,6 +32,7 @@ class ApiKey(Base):
 
 
 class WebhookEvent(Base):
+    """Records inbound webhook events and their processing status."""
     __tablename__ = "webhook_events"
 
     event_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))

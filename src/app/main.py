@@ -1,3 +1,5 @@
+"""FastAPI application entrypoint for ATS Integration."""
+
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
@@ -13,11 +15,13 @@ app = FastAPI(
 
 @app.on_event("startup")
 def startup_event() -> None:
+    """Initialize the database and seed sample data on application startup."""
     database.create_tables()
     database.seed_sample_data()
 
 @app.exception_handler(SQLAlchemyError)
 async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError) -> JSONResponse:
+    """Return a generic SQLAlchemy error response to the caller."""
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "Database error occurred."},
@@ -29,7 +33,9 @@ async def workable_webhook(
     x_api_key: str | None = Header(None, alias="X-Api-Key"),
     x_company_id: str | None = Header(None, alias="X-Company-Id"),
     db: Session = Depends(database.get_db),
-):
+) -> dict[str, str]:
+    """Process a Workable webhook request and queue the resume for scoring."""
+
     if not x_api_key or not x_company_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
