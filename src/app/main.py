@@ -69,8 +69,7 @@ async def workable_webhook(
     return {"status": "accepted", "event_id": event.event_id}
 
 
-"""Want a root page"""
-
 @app.get("/")
 async def root() -> dict[str, str]:
+    """Return the root page."""
     return {"message": "ATS Integration API is running"}
