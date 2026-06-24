@@ -31,6 +31,49 @@ class WebhookEventResponse(BaseModel):
     company_id: str
     event_type: str
     payload: dict[str, Any]
+    candidate_id: str | None = None
+    candidate_name: str | None = None
+    candidate_email: str | None = None
+    resume_url: str | None = None
+    job_id: str | None = None
+    job_title: str | None = None
     status: str
     created_at: datetime
     queued_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class EventSummary(BaseModel):
+    event_id: str
+    event_type: str
+    candidate_name: str | None = None
+    candidate_email: str | None = None
+    job_title: str | None = None
+    created_at: datetime
+    status: str
+
+
+class CandidateSummary(BaseModel):
+    candidate_id: str | None = None
+    name: str | None = None
+    email: str | None = None
+    latest_job_title: str | None = None
+    latest_event_type: str | None = None
+    latest_event_id: str | None = None
+
+
+class CandidateSearchResponse(BaseModel):
+    candidate_id: str | None = None
+    name: str | None = None
+    email: str | None = None
+    events: list[EventSummary] = []
+
+
+class CandidateDetailResponse(BaseModel):
+    candidate_id: str | None = None
+    name: str | None = None
+    email: str | None = None
+    resume_url: str | None = None
+    jobs: list[dict[str, str | None]] = []
+    events: list[EventSummary] = []

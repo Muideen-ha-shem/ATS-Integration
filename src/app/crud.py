@@ -101,3 +101,83 @@ def create_webhook_event(
 def get_webhook_event_by_id(db: Session, event_id: str) -> Optional[models.WebhookEvent]:
     """Return a webhook event by its unique identifier."""
     return db.query(models.WebhookEvent).filter(models.WebhookEvent.event_id == event_id).first()
+
+
+def update_webhook_event_metadata(
+    db: Session,
+    event_id: str,
+    candidate_id: str | None = None,
+    candidate_name: str | None = None,
+    candidate_email: str | None = None,
+    resume_url: str | None = None,
+    job_id: str | None = None,
+    job_title: str | None = None,
+) -> Optional[models.WebhookEvent]:
+    """Update extracted candidate/job metadata for an existing webhook event."""
+    event = get_webhook_event_by_id(db, event_id)
+    if not event:
+        return None
+
+    if candidate_id is not None:
+        event.candidate_id = candidate_id
+    if candidate_name is not None:
+        event.candidate_name = candidate_name
+    if candidate_email is not None:
+        event.candidate_email = candidate_email
+    if resume_url is not None:
+        event.resume_url = resume_url
+    if job_id is not None:
+        event.job_id = job_id
+    if job_title is not None:
+        event.job_title = job_title
+
+    db.add(event)
+    db.commit()
+    db.refresh(event)
+    return event
+
+
+def search_webhook_events(
+    db: Session,
+    candidate_id: str | None = None,
+    email: str | None = None,
+    job_id: str | None = None,
+    limit: int = 25,
+    offset: int = 0,
+) -> list[models.WebhookEvent]:
+    """Search webhook events by extracted candidate or job fields."""
+    query = db.query(models.WebhookEvent)
+    if candidate_id:
+        query = query.filter(models.WebhookEvent.candidate_id == candidate_id)
+    if email:
+        query = query.filter(models.WebhookEvent.candidate_email == email)
+    if job_id:
+        query = query.filter(models.WebhookEvent.job_id == job_id)
+
+    return (
+        query.order_by(models.WebhookEvent.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+
+def list_webhook_events(db: Session, limit: int = 25, offset: int = 0) -> list[models.WebhookEvent]:
+    """Return a paginated list of webhook events ordered by newest first."""
+    return (
+        db.query(models.WebhookEvent)
+        .order_by(models.WebhookEvent.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+
+def get_events_by_candidate_id(db: Session, candidate_id: str) -> list[models.WebhookEvent]:
+    """Return all webhook events for a given candidate identifier."""
+    return (
+        db.query(models.WebhookEvent)
+        .filter(models.WebhookEvent.candidate_id == candidate_id)
+        .order_by(models.WebhookEvent.created_at.desc())
+        .all()
+    )

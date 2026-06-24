@@ -2,8 +2,9 @@
 
 import os
 from datetime import datetime
+from typing import Generator
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./ats_integration.db")
@@ -21,7 +22,7 @@ class Base(DeclarativeBase):
     pass
 
 
-def get_db() -> Session:
+def get_db() -> Generator[Session, None, None]:
     """Yield a database session for dependency injection."""
     with SessionLocal() as session:
         yield session
@@ -30,6 +31,24 @@ def get_db() -> Session:
 def create_tables() -> None:
     """Create all database tables using SQLAlchemy metadata."""
     Base.metadata.create_all(bind=engine)
+
+
+def upgrade_webhook_events_table_schema() -> None:
+    """Add new extracted metadata columns to the webhook_events table if missing."""
+    with engine.begin() as conn:
+        result = conn.execute(text("PRAGMA table_info('webhook_events')"))
+        existing_columns = {row[1] for row in result.fetchall()}
+        columns_to_add = [
+            ("candidate_id", "TEXT"),
+            ("candidate_name", "TEXT"),
+            ("candidate_email", "TEXT"),
+            ("resume_url", "TEXT"),
+            ("job_id", "TEXT"),
+            ("job_title", "TEXT"),
+        ]
+        for column_name, column_type in columns_to_add:
+            if column_name not in existing_columns:
+                conn.execute(text(f"ALTER TABLE webhook_events ADD COLUMN {column_name} {column_type}"))
 
 
 def seed_sample_data() -> None:
