@@ -24,7 +24,7 @@ if __name__ == "__main__":
             "candidate": {
                 "id": "123",
                 "name": "Jane Doe",
-                "resume_url": "https://example.com/resume.pdf",
+                "resume_url": "https://docs.google.com/document/d/1B4xGUUm8-g_Zygx1ygfZvMoOdSlz2iiOiXgiiuxip2c/edit?usp=drivesdk",
             }
         }
     }
