@@ -23,14 +23,14 @@ if __name__ == "__main__":
         "data": {
             "candidate": {
                 "id": "123",
-                "name": "Jane Doe",
-                "resume_url": "https://docs.google.com/document/d/1B4xGUUm8-g_Zygx1ygfZvMoOdSlz2iiOiXgiiuxip2c/edit?usp=drivesdk",
+                "name": "Sample Candidate",
+                "resume_url": "https://example.com/resume.pdf",
             }
         }
     }
     headers = {
-        "X-Api-Key": "sk_test_company_123",
-        "X-Company-Id": "company_123",
+        "X-Api-Key": os.getenv("TEST_API_KEY", "sk_test_company_123"),
+        "X-Company-Id": os.getenv("TEST_COMPANY_ID", "company_123"),
     }
 
     with TestClient(app) as client:

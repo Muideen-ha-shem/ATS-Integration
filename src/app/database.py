@@ -1,13 +1,14 @@
 """Database configuration and helper utilities for ATS Integration."""
 
-import os
 from datetime import datetime
 from typing import Generator
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./ats_integration.db")
+from app.config import settings
+
+DATABASE_URL = settings.database_url
 
 engine = create_engine(
     DATABASE_URL,
@@ -53,6 +54,9 @@ def upgrade_webhook_events_table_schema() -> None:
 
 def seed_sample_data() -> None:
     """Seed example integration and API key records for local development."""
+    if not settings.enable_sample_data:
+        return
+
     from app import crud
 
     with SessionLocal() as session:

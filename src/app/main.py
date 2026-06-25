@@ -6,10 +6,12 @@ from typing import Any
 
 from fastapi import Body, Depends, FastAPI, Header, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, JSONResponse
+from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app import crud, database, schemas, services
+from app.config import settings
 
 app = FastAPI(
     title="ATS Integration API",
@@ -17,12 +19,15 @@ app = FastAPI(
     version="0.1.0",
 )
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("ats_integration")
+logging.basicConfig(
+    level=getattr(logging, settings.log_level.upper(), logging.INFO),
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
 
 @app.on_event("startup")
 def startup_event() -> None:
-    """Initialize the database and seed sample data on application startup."""
+    """Initialize the database and optionally seed sample data on application startup."""
     database.create_tables()
     database.upgrade_webhook_events_table_schema()
     database.seed_sample_data()
@@ -35,6 +40,7 @@ async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError) -
         content={"detail": "Database error occurred."},
     )
 
+@app.post("/webhook/workable", status_code=status.HTTP_202_ACCEPTED)
 @app.post("/api/webhooks/workable", status_code=status.HTTP_202_ACCEPTED)
 async def workable_webhook(
     payload: dict[str, Any] = Body(...),
@@ -49,6 +55,14 @@ async def workable_webhook(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="X-Api-Key and X-Company-Id headers are required.",
         )
+
+    try:
+        schemas.WorkableWebhookPayload.model_validate(payload)
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=exc.errors(),
+        ) from exc
 
     integration = crud.get_integration_by_company_and_provider(db, x_company_id, "workable")
     if not integration:
@@ -84,20 +98,28 @@ async def workable_webhook(
             job_id=metadata.get("job_id"),
             job_title=metadata.get("job_title"),
         )
+        logger.info(
+            "webhook.persisted",
+            extra={
+                "event_id": event.event_id,
+                "provider": event.provider,
+                "event_type": event.event_type,
+                "company_id": x_company_id,
+                "status": event.status,
+            },
+        )
     except Exception:
-        logger.exception("Failed to update webhook metadata for event_id=%s", event.event_id)
-
-    logger.info(
-        "Received webhook",
-        extra={
-            "event_id": event.event_id,
-            "event_type": payload.get("event", "unknown"),
-            "candidate_id": metadata.get("candidate_id"),
-            "company_id": x_company_id,
-        },
-    )
+        logger.exception("webhook.metadata_update_failed event_id=%s", event.event_id)
 
     services.queue_resume_for_scoring(event)
+    logger.info(
+        "webhook.queued",
+        extra={
+            "event_id": event.event_id,
+            "status": event.status,
+            "queued_at": event.queued_at.isoformat() if event.queued_at else None,
+        },
+    )
 
     return {"status": "accepted", "event_id": event.event_id}
 
