@@ -1,0 +1,9 @@
+POST https://ha-shem.workable.com/spi/v3/subscriptions
+Authorization: Bearer osMB5L9VoST1Z2pfAQEwq2Or5-NPclXu3TzdYgpSb28
+Content-Type: application/json
+
+{
+  "target": "https://webhook.site/5fcd2aed-15c4-4d10-8c22-ed7e27fc8157",
+  "event": "candidate_moved",
+  "stage_slug": "applied"
+}
